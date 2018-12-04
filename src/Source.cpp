@@ -60,7 +60,7 @@ int main(int argc, char * argv[])
 
 	for(blogIndex i = 0; i < blogDB::getSize(); i++) printStatus(blogDB::getBlog(i));
 
-
+	network::socketListener doorbell(5099);
 
 	writeAndCloseEverything();
 
