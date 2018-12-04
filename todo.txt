@@ -11,3 +11,4 @@ Server:
 1) Stores blogs along with metadata
 2) Distributes blogs to clients to ensure equal coverage and redundancy
 3) Logs who has which blogs so that a specific blog can be retreived semi-easily
+4) Every hour or so the DB locks itself to sort itself by the number of copies a blog has, from least to greatest (to make pulling empty blogs easier)
