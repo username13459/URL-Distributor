@@ -1,4 +1,8 @@
 #include<mutex>
+#include<fstream>
+#include<string>
+
+using std::string;
 
 
 #include "types.h"
@@ -9,6 +13,8 @@ namespace blogDB
 {
 	//Mutex for write perms to the DB
 	std::mutex dbWrite;
+
+	string dbFile = "URL DB.txt";
 
 	//An array pointing to arrays, which themselves contain blogs.  The backbone of the DB
 	blog ** blogArrays = NULL;
@@ -78,7 +84,8 @@ namespace blogDB
 			//"Seed" the list of blogs to return
 			for(int i = 0; i < numBlogs; i++)
 			{
-				ret.push_back(getIndexPair(i));
+				if(i < totalNumBlogs) ret.push_back(getIndexPair(i));
+				else break;
 			}
 
 			//Compare the DB to our shortlist
@@ -89,7 +96,7 @@ namespace blogDB
 					//Check the current item in the DB against our list
 					for(int i = 0; i < ret.size(); i++)
 					{
-						if(getBlogRef(ret[i]).getNumCopies() < getBlogRef(index).getNumCopies())
+						if(getBlogRef(ret[i]).getNumCopies() > getBlogRef(index).getNumCopies())
 						{
 							ret[i] = getIndexPair(index);
 							break;
@@ -173,6 +180,95 @@ namespace blogDB
 			blogArrays[i] = NULL;
 		}
 
+
+	void saveDB(string location)
+	{
+		if(location == "") location = dbFile;
+
+		progLog::write("Preparing to write database to file at " + location);
+		
+		dbWrite.lock();
+
+		progLog::write("Database locked.");
+
+		ofstream out;
+		try
+		{
+			out.open(location);
+		}
+		catch(...)
+		{
+			location += "_fallback";
+			progLog::write("<<CRITICAL>> Unable to open preferred output location, using " + location);
+			try
+			{
+				out.open(location);
+			}
+			catch(...)
+			{
+				progLog::write("<<CRITICAL>> Unable to open fallback location!");
+				progLog::write("<<CRITICAL>> DB SAVE FAILED!");
+				dbWrite.unlock();
+				return;
+			}
+		}
+
+		out << "totalNumBlogs" << endl;
+		out << totalNumBlogs << endl;
+		out << endl;
+
+		for(blogIndex i = 0; i < totalNumBlogs; i++)
+		{
+			try
+			{
+				string outputBlock = "";
+
+				auto append = [&outputBlock](string data)
+				{
+					outputBlock += data + '\n';
+				};
+
+				blog curr = getBlog(i);
+
+				append("<blog>");
+				append("<URL>");
+				append(curr.getURL());
+				append("<State>");
+				append(conv::toString((int)curr.getState()));
+				append("<numCopies>");
+				append(conv::toString(curr.getNumCopies()));
+				append("<Archivers>");
+				for(int i = 0; i < curr.getNumCopies(); i++)
+				{
+					append(curr.getArchivers()[i].getName());
+				}
+				append("</blog>\n");
+				
+				out << outputBlock;
+				out.flush();
+
+			}
+			catch(dbOutOfBoundsException e)
+			{
+				progLog::write("Caught dbOutOfBounds during save: " + e.details);
+			}
+			catch(dbNULLPointerException e)
+			{
+				progLog::write("Caught dbNullPointer during save: " + e.details);
+			}
+			catch(dbException e)
+			{
+				progLog::write("Caught generic DB exception: " + e.details);
+			}
+			catch(...)
+			{
+				progLog::write("Caught unknown exception!");
+			}
+		}
+
+		progLog::write("Database save complete.");
+
+		out.close();
 
 		dbWrite.unlock();
 	}

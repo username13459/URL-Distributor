@@ -62,6 +62,9 @@ namespace blogDB
 	//Loads the DB
 	void loadDB();
 
+	//Saves the DB to the disk.  If location == "", the filename in 'dbFile' is used.
+	void saveDB(string location = "");
+
 	//Sorts the DB from least-archived to most-archived
 	//THIS IS RESOURCE INTENSIVE, AND WILL LOCK THE DB FOR SOME TIME
 	void sortDB();

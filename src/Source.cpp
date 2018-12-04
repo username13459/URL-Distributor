@@ -40,6 +40,9 @@ void loadEverything()
 
 void writeAndCloseEverything()
 {
+	blogDB::saveDB();
+	var::longTime now = var::longTime::now();
+	blogDB::saveDB("URL DB BACKUP" + now.getYMD() + "-" + now.getHMS() + ".txt.db");
 	progLog::closeLog();
 }
 
@@ -53,6 +56,16 @@ int main(int argc, char * argv[])
 	blogDB::append(blog("blog4.tumblr.com"));
 	blogDB::append(blog("blog5.tumblr.com"));
 
+	blogDB::getBlogsToArchive(2, types::user("TESTING#TESTING"));
+
+	blogDB::sortDB();
+
+	blogDB::getBlogsToArchive(1, types::user("TESTING2####"));
+	blogDB::getBlogsToArchive(3, types::user("TESTING3####"));
+
+	blogDB::sortDB();
+
+	blogDB::getBlogsToArchive(7, types::user("TESTING4####"));
 
 	for(int i = 0; i < 5; i++)
 	{
