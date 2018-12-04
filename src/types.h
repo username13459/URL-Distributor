@@ -7,6 +7,15 @@ using std::string;
 
 namespace types
 {
+	struct Exception
+	{
+		Exception() {}
+		Exception(string details) { this->details = details; }
+
+		string details;
+	};
+	
+
 	//Stores information for a single user, 
 	class user
 	{
@@ -32,7 +41,7 @@ namespace types
 	string archiveStateToString(types::archiveState state);
 	
 
-	struct blogException
+	struct blogException : Exception
 	{
 		blogException() {}
 		blogException(string details) { this->details = details; }
