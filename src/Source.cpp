@@ -1,6 +1,7 @@
 #include<iostream>
 
-#include "../zlib/varConv.h"
+#include "zlib/varConv.h"
+#include "zlib/network.h"
 
 using namespace zlib::conv;
 
@@ -36,6 +37,8 @@ void loadEverything()
 {
 	progLog::startLog();
 	blogDB::loadDB();
+
+	progLog::write("Initial load complete");
 }
 
 void writeAndCloseEverything()
@@ -46,34 +49,24 @@ void writeAndCloseEverything()
 	progLog::closeLog();
 }
 
+void openListenSocket()
+{
+
+}
+
 int main(int argc, char * argv[])
 {
 	loadEverything();
 
-	blogDB::append(blog("blog1.tumblr.com"));
-	blogDB::append(blog("blog2.tumblr.com"));
-	blogDB::append(blog("blog3.tumblr.com"));
-	blogDB::append(blog("blog4.tumblr.com"));
-	blogDB::append(blog("blog5.tumblr.com"));
+	for(blogIndex i = 0; i < blogDB::getSize(); i++) printStatus(blogDB::getBlog(i));
 
-	blogDB::getBlogsToArchive(2, types::user("TESTING#TESTING"));
 
-	blogDB::sortDB();
-
-	blogDB::getBlogsToArchive(1, types::user("TESTING2####"));
-	blogDB::getBlogsToArchive(3, types::user("TESTING3####"));
-
-	blogDB::sortDB();
-
-	blogDB::getBlogsToArchive(7, types::user("TESTING4####"));
-
-	for(int i = 0; i < 5; i++)
-	{
-		printStatus(blogDB::getBlog(i));
-	}
 
 	writeAndCloseEverything();
 
+#ifdef _WIN32
+	cout << "Press any key to close." << endl;
 	cin.get();
+#endif
 	return 0;
 }

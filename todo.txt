@@ -5,10 +5,13 @@ Client:
 3) Submit potential URLs to the server
 4) ? parse through text files searching for URLs, and relay them to the server
 
-
-
 Server:
 1) Stores blogs along with metadata
 2) Distributes blogs to clients to ensure equal coverage and redundancy
 3) Logs who has which blogs so that a specific blog can be retreived semi-easily
 4) Every hour or so the DB locks itself to sort itself by the number of copies a blog has, from least to greatest (to make pulling empty blogs easier)
+
+TODO:
+1) @mr1337x when the URL distro tool is one
+2) Have the DB reject duplicate URLs
+3) Add a 'archive tool' spec to the db
