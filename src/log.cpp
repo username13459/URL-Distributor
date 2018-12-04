@@ -17,7 +17,7 @@ namespace progLog
 {
 	//The prefix and postfix for the log file name, to be placed around the timestamp the log was created
 	std::string logFilePrefix = "log";
-	std::string logFilePostfix = ".txt";
+	std::string logFilePostfix = ".log";
 
 	//The ofstream for the log
 	std::ofstream logOut;
