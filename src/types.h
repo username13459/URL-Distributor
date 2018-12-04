@@ -59,7 +59,7 @@ namespace types
 		blog() {}
 		blog(string URL);
 
-	private:
+	protected:
 		
 		//The blog's URL
 		string URL = "";
@@ -92,5 +92,12 @@ namespace types
 
 	};
 
-
+	class modifiableBlog : public blog
+	{
+	public:
+		string & URLRef() { return URL; }
+		archiveState & stateRef() { return state; }
+		int & numCopiesRef() { return numCopies; }
+		std::vector<user> & usersRef() { return archivers; }
+	};
 }

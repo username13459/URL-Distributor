@@ -23,7 +23,7 @@ namespace blogDB
 	//The number of blogs in the DB
 	blogIndex totalNumBlogs = 0;
 
-
+	blogIndex getSize() { return totalNumBlogs; }
 
 	//Separates a raw index into a major and minor index (which each correspond to a level in the array tree)
 	blogIndexPair getIndexPair(blogIndex index)
@@ -179,6 +179,72 @@ namespace blogDB
 		{
 			blogArrays[i] = NULL;
 		}
+
+		ifstream load;
+	
+		try
+		{
+			load.open(dbFile);
+
+			string data;
+			getline(load, data);
+
+			if(data != "totalNumBlogs") throw dbLoadFailed("DB file corrupted!");
+			
+			getline(load, data);
+			{
+				stringstream convert;
+				convert << data;
+				convert >> totalNumBlogs;
+				if(convert.fail()) throw dbLoadFailed("Cannot parse totalNumBlogs: " + data);
+			}
+
+			for(blogIndex i = 0; i < totalNumBlogs; i++)
+			{
+				auto advance = [&load, &data](string dataExpected = "")
+				{
+					getline(load, data);
+					if(data != dataExpected)  progLog::write("Expected + \"" + dataExpected + "\", got \"" + data + "\"!");
+				};
+
+				auto get = [&load, &data]()
+				{
+					getline(load, data);
+					return data;
+				};
+
+				types::modifiableBlog curr;
+
+				advance("");
+				advance("<blog>");
+				advance("<URL>");
+				curr.URLRef() = get();
+				advance("<State>");
+				curr.stateRef() = (types::archiveState)(int)conv::toNum(get());
+				advance("<numCopies>");
+				curr.numCopiesRef() = (int)conv::toNum(get());
+				advance("<Archivers>");
+				for(int i = 0; i < curr.numCopiesRef(); i++)
+				{
+					curr.usersRef().push_back(get());
+				}
+				advance("</blog>");
+
+				getBlogRef(i, true) = blog(curr);
+			}
+		}
+		catch(dbLoadFailed e)
+		{
+			blogArrays = NULL;
+			totalNumBlogs = -1;
+			progLog::write("<<CRITICAL>> Caught dbLoadFailed: " + e.details);
+		}
+		catch(...)
+		{
+			blogArrays = NULL;
+			totalNumBlogs = -1;
+			progLog::write("<<CRITICAL>> DB LOAD FAILED!");
+		};
 
 		dbWrite.unlock();
 	}

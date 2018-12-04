@@ -17,8 +17,6 @@ struct dbException : types::Exception
 {
 	dbException() {}
 	dbException(string details) { this->details = details; }
-
-	string details = "";
 };
 
 struct dbOutOfBoundsException : dbException
@@ -42,9 +40,18 @@ struct dbBadGetToArchiveException : dbException
 	dbBadGetToArchiveException(string details) { this->details = details; }
 };
 
+//Thrown when the loadDB() fails
+struct dbLoadFailed : dbException
+{
+	dbLoadFailed() {}
+	dbLoadFailed(string details) { this->details = details; }
+};
+
 namespace blogDB
 {	
 	static const long int maxArraySize = 1'000'000;
+
+	blogIndex getSize();
 
 	//Converts an index into an index pair
 	blogIndexPair getIndexPair(blogIndex index);
