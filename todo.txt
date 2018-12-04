@@ -1,0 +1,13 @@
+Features:
+Client:
+1) Requests 'n' URLS to download from central server
+2) ? Tell the server "I've got X blog"
+3) Submit potential URLs to the server
+4) ? parse through text files searching for URLs, and relay them to the server
+
+
+
+Server:
+1) Stores blogs along with metadata
+2) Distributes blogs to clients to ensure equal coverage and redundancy
+3) Logs who has which blogs so that a specific blog can be retreived semi-easily
