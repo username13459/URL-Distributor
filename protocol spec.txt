@@ -1,0 +1,71 @@
+NOTE: Each 'transmission' ends with a \0 (null character).  There are NOT null characters between lines of the same transmission
+
+
+# Handshake
+c: HELLO v1.0.0							//Informs the server of the protocol version the client would like to use
+s: HELLO v1.0.0							//Confirms the protocol version
+c: user "<DISCORD TAG>" "<PROGRAM>"		//Tells the server the clients' discord tag and the program used for archiving
+s: WELCOME								//Indicates to the client that the handshake succeeded, and all commands are available
+
+
+
+# BYE command
+Disconnects from the server
+example: (handshake already complete)
+c: BYE
+s: <closes socket>
+
+
+
+# KICK message
+Sent only from the server to the client, used when there is an error, either with the client's message or the server internally
+example: (any state)
+c: GET 50b
+s: KICK
+s: <closes socket>
+
+
+# GET command
+Retreives a list of URLs to scrape from the server
+Syntax: "GET <num>"
+Note: The server may not send back the *exact* number of URLs requested, in some cases the list may be fewer (in situations where the DB cannot provide the requested number of URLs).  The client should check the 'SEND' reply for the number of elements to expect
+example:
+c: GET 50		//A request for 50 URLs
+s: SEND 50		//Tells the client how many URLs to expect
+s:blog1.tumblr.com\nblog2.tumblr.com\n<..etc..>\nblog50.tumblr.com
+s: SENT			//Tells the client the URLs have finished
+c: RECVD 50		//Tells the server how many URLs it received
+
+
+# ARCHIVED command
+Tell the server we have finished archiving a URL (with the tool specified at login)
+Syntax: "ARCHIVED <BLOG> <TOOL>"
+example:
+<handshake already completed>
+c: ARCHIVED blog1.tumblr.com tumblthree		//Tells the server the blog has been fully archived using tumblthree
+s: OK
+c: ARCHIVED blog2.tumblr.com tumblr-utils
+s: OK
+
+
+# BAD command
+Tell the server a blog isn't a real blog, or is otherwise unreachable
+example: (handshake already completed)
+c: BAD blog3.tumblr.com
+s: OK
+c: BAD blog17.tumblr.com
+s: OK
+
+
+# SUBMIT command
+Submits more blogs to the server
+example: (handshake already completed)
+c: SUBMIT 3				//Tells the server the client is submitting 3 new blogs
+c: blog50.tumblr.com\nblog51.tumblr.com\nblog52.tumblr.com
+c: SENT					//Tell the server transmission is complete
+s: RECVD 3				//Tell the client 3 blogs were received
+
+
+# SUBMIT-DUMP command
+Submits a mass of text to the server, for the server to parse through for blogs
+<Not yet implimented, but would be a nice feature to have>
