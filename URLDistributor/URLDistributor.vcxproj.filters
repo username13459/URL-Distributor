@@ -60,6 +60,9 @@
     <ClCompile Include="..\zlib\input.cpp">
       <Filter>Source Files\zlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\db.h">
@@ -103,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="..\zlib\general.h">
       <Filter>Source Files\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\log.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

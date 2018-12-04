@@ -85,6 +85,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../;../../</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -117,6 +118,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\db.cpp" />
+    <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\Source.cpp" />
     <ClCompile Include="..\src\types.cpp" />
     <ClCompile Include="..\zlib\cryptography.cpp" />
@@ -133,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\db.h" />
+    <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\zlib\cryptography.h" />
     <ClInclude Include="..\zlib\draw.h" />
