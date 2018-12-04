@@ -47,12 +47,17 @@ int main(int argc, char * argv[])
 {
 	loadEverything();
 
-	progLog::write("blog size:" + conv::toString(sizeof(types::blog)));
+	blogDB::append(blog("blog1.tumblr.com"));
+	blogDB::append(blog("blog2.tumblr.com"));
+	blogDB::append(blog("blog3.tumblr.com"));
+	blogDB::append(blog("blog4.tumblr.com"));
+	blogDB::append(blog("blog5.tumblr.com"));
 
-	printIndexPair(blogDB::getIndexPair(0));
-	printIndexPair(blogDB::getIndexPair(blogDB::maxArraySize));
-	printIndexPair(blogDB::getIndexPair(blogDB::maxArraySize + 1));
-	printIndexPair(blogDB::getIndexPair(blogDB::maxArraySize * 5 + 2));
+
+	for(int i = 0; i < 5; i++)
+	{
+		printStatus(blogDB::getBlog(i));
+	}
 
 	writeAndCloseEverything();
 

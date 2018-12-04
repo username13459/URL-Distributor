@@ -25,7 +25,6 @@ namespace blogDB
 		return blogIndexPair(index / maxArraySize, index % maxArraySize);
 	}
 
-	
 	//Returns a reference to the blog at 'index'
 	//If createMode is true, the db will create missing arrays as it goes, and disregard accessing positions past the end of the current db
 	blog & getBlogRef(blogIndexPair index, bool createMode = false)
@@ -39,7 +38,7 @@ namespace blogDB
 		}
 
 		//This shouldn't EVER happen, so createMode won't override this
-		throw dbNULLPointerException("DB ROOT NULL!");
+		if(blogArrays == NULL) throw dbNULLPointerException("DB ROOT NULL!");
 
 
 		if(blogArrays[index.first] == NULL)
@@ -57,14 +56,14 @@ namespace blogDB
 		return getBlogRef(getIndexPair(index), createMode);
 	}
 
-	std::vector<blog> getBlogsToArchive(int numBlogs, types::user archiver)
+	blog getBlog(blogIndexPair index)
 	{
-		std::vector<blogIndexPair> pairs = getBlogIndexesToArchive(numBlogs);
+		return getBlogRef(index);
+	}
 
-		for(int i = 0; i < pairs.size(); i++)
-		{
-			getBlogRef(pairs[i]).addDownloader(archiver);
-		}
+	blog getBlog(blogIndex index)
+	{
+		return getBlogRef(index);
 	}
 
 	//Returns a vector contaning blog index-pairs, where the blogs contained have the least number of copies present in the DB
@@ -129,12 +128,33 @@ namespace blogDB
 		return ret;
 	}
 
+	std::vector<blog> getBlogsToArchive(int numBlogs, types::user archiver)
+	{
+		std::vector<blogIndexPair> pairs = getBlogIndexesToArchive(numBlogs);
+
+		for(int i = 0; i < pairs.size(); i++)
+		{
+			getBlogRef(pairs[i]).addDownloader(archiver);
+		}
+
+		std::vector<blog> ret;
+
+		ret.reserve(pairs.size());
+
+		for(unsigned i = 0; i < pairs.size(); i++)
+		{
+			ret.push_back(getBlog(pairs[i]));
+		}
+
+		return ret;
+	}
 
 	void append(blog newBlog)
 	{
 		dbWrite.lock();
-		if (totalNumBlogs == maxArraySize * maxArraySize) throw dbException("DB has reached max space!");
+		if ((long long int)totalNumBlogs >= (long long int) maxArraySize * (long long int) maxArraySize) throw dbException("DB has reached max space!");
 
+		//setBlogAt(totalNumBlogs, newBlog);
 		getBlogRef(totalNumBlogs, true) = newBlog;
 		totalNumBlogs++;
 		dbWrite.unlock();
@@ -148,7 +168,10 @@ namespace blogDB
 
 		blogArrays = new blog*[maxArraySize];
 
-
+		for(int i = 0; i < maxArraySize; i++)
+		{
+			blogArrays[i] = NULL;
+		}
 
 
 		dbWrite.unlock();

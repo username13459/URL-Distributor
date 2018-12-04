@@ -49,8 +49,12 @@ namespace blogDB
 	//Converts an index into an index pair
 	blogIndexPair getIndexPair(blogIndex index);
 
-	//Returns 'numBlogs' (or fewer) blogs to archive)
-	std::vector<blog> getBlogsToArchive(int numBlogs);
+	//Returns 'numBlogs' (or fewer) blogs to archive, and notes that 'archiver' will be downloading it
+	std::vector<blog> getBlogsToArchive(int numBlogs, types::user archiver);
+
+	//Returns a copy of the blog at 'index' in the DB
+	blog getBlog(blogIndexPair index);
+	blog getBlog(blogIndex index);
 
 	//Appends a blog to the dp
 	void append(blog newBlog);
