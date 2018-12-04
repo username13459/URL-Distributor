@@ -14,7 +14,7 @@ namespace blogDB
 	//Mutex for write perms to the DB
 	std::mutex dbWrite;
 
-	string dbFile = "URL DB.txt";
+	string dbFile = "URL DB.txt.db";
 
 	//An array pointing to arrays, which themselves contain blogs.  The backbone of the DB
 	blog ** blogArrays = NULL;
@@ -180,6 +180,8 @@ namespace blogDB
 			blogArrays[i] = NULL;
 		}
 
+		dbWrite.unlock();
+	}
 
 	void saveDB(string location)
 	{
