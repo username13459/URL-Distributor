@@ -1,4 +1,5 @@
 #include<iostream>
+#include<thread>
 
 #include "zlib/varConv.h"
 #include "zlib/network.h"
@@ -8,11 +9,15 @@ using namespace zlib::conv;
 #include "types.h"
 #include "db.h"
 #include "log.h"
+#include "commThreads.h"
 
 using std::cin;
 using std::cout;
 using std::endl;
 
+bool acceptConnections = true;
+
+vector<std::thread> threads;
 
 void printStatus(types::blog b)
 {
@@ -49,9 +54,29 @@ void writeAndCloseEverything()
 	progLog::closeLog();
 }
 
-void openListenSocket()
+void startListening()
 {
+	try
+	{
+		network::socketListener doorbell(25341);
 
+		while(acceptConnections)
+		{
+			network::childSocket newSock = doorbell.listenForConnection();
+
+			commThreads::openNewConnection(newSock);
+
+			//commThreads::joinIfPossible();
+
+			static int numConns = 0;
+			numConns++;
+			if(numConns == 3) acceptConnections = false;
+		}
+	}
+	catch(...)
+	{
+		cout << "Unknown exception." << endl;
+	}
 }
 
 int main(int argc, char * argv[])
@@ -60,7 +85,7 @@ int main(int argc, char * argv[])
 
 	for(blogIndex i = 0; i < blogDB::getSize(); i++) printStatus(blogDB::getBlog(i));
 
-	network::socketListener doorbell(5099);
+	startListening();
 
 	writeAndCloseEverything();
 

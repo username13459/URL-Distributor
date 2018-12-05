@@ -117,6 +117,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\commThreads.cpp" />
     <ClCompile Include="..\src\db.cpp" />
     <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\Source.cpp" />
@@ -134,6 +135,7 @@
     <ClCompile Include="..\zlib\windInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\commThreads.h" />
     <ClInclude Include="..\src\db.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\types.h" />
