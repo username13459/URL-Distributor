@@ -1,3 +1,5 @@
+Spec v1.0.1
+
 NOTE: Each 'transmission' ends with a \0 (null character).  There are NOT null characters between lines of the same transmission
 
 
