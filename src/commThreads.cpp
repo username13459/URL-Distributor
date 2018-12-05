@@ -23,6 +23,7 @@ namespace commThreads
 
 			};
 
+			while(socket.receive() != "Quit\r\n") socket.transmit("That's all, folks!");
 
 
 			socket.closeSocket();
