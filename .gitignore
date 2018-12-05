@@ -26,6 +26,7 @@
 *.exe
 *.out
 *.app
+*.prog
 
 # VS files that break things
 *.sdf
