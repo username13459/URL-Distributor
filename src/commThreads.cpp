@@ -1,6 +1,7 @@
 #include<thread>
 #include<iostream>
 #include<vector>
+#include<functional>
 
 using std::vector;
 
