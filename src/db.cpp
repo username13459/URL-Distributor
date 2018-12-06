@@ -1,6 +1,8 @@
 #include<mutex>
 #include<fstream>
 #include<string>
+#include <iostream>
+#include <iomanip>
 
 using std::string;
 
@@ -395,8 +397,17 @@ namespace blogDB
 		out << totalNumBlogs << endl;
 		out << endl;
 
+		//The size of one tenth of a percent of the DB, used to determine when to output progress messages
+		int oneTenthPercDB = totalNumBlogs / 1000;
+
 		for(blogIndex i = 0; i < totalNumBlogs; i++)
 		{
+			if (i%oneTenthPercDB == 0)
+			{
+				std::cout << "Progress:";
+				std::cout << std::setw(4) << double(i) / double(totalNumBlogs) * double(100) << '%' << endl;
+			}
+
 			try
 			{
 				string outputBlock = "";
