@@ -2,7 +2,6 @@
 #include<fstream>
 #include<string>
 #include <iostream>
-#include <iomanip>
 
 using std::string;
 
@@ -289,6 +288,8 @@ namespace blogDB
 
 		ifstream load;
 	
+		zlib::timer loadTime;
+
 		try
 		{
 			load.open(dbFile);
@@ -306,8 +307,19 @@ namespace blogDB
 				if(convert.fail()) throw dbLoadFailed("Cannot parse totalNumBlogs: " + data);
 			}
 
+			//The size of one tenth of a percent of the DB, used to determine when to output progress messages
+			int onePercDB = totalNumBlogs / 100;
+
 			for(blogIndex i = 0; i < totalNumBlogs; i++)
 			{
+				
+
+				if(i%onePercDB == 0)
+				{
+					std::cout << "Progress:";
+					std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
+				}
+
 				auto advance = [&load, &data](string dataExpected = "")
 				{
 					getline(load, data);
@@ -344,6 +356,8 @@ namespace blogDB
 
 				getBlogRef(i, true) = blog(curr);
 			}
+
+			progLog::write("DB Load complete in " + conv::toString(loadTime.getTime()) + "s.");
 		}
 		catch(dbLoadFailed e)
 		{
@@ -364,6 +378,8 @@ namespace blogDB
 	void saveDB(string location)
 	{
 		if(location == "") location = dbFile;
+
+		zlib::timer saveTime;
 
 		progLog::write("Preparing to write database to file at " + location);
 		
@@ -398,14 +414,14 @@ namespace blogDB
 		out << endl;
 
 		//The size of one tenth of a percent of the DB, used to determine when to output progress messages
-		int oneTenthPercDB = totalNumBlogs / 1000;
+		int onePercDB = totalNumBlogs / 100;
 
 		for(blogIndex i = 0; i < totalNumBlogs; i++)
 		{
-			if (i%oneTenthPercDB == 0)
+			if (i%onePercDB == 0)
 			{
 				std::cout << "Progress:";
-				std::cout << std::setw(4) << double(i) / double(totalNumBlogs) * double(100) << '%' << endl;
+				std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
 			}
 
 			try
@@ -457,7 +473,7 @@ namespace blogDB
 			}
 		}
 
-		progLog::write("Database save complete.");
+		progLog::write("Database save complete in " + conv::toString(saveTime.getTime()) + "s.");
 
 		out.close();
 
