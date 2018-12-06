@@ -6,6 +6,7 @@ using std::string;
 
 
 #include "types.h"
+#include "URLtypes.h"
 #include "log.h"
 #include "db.h"
 
@@ -72,6 +73,36 @@ namespace blogDB
 		return getBlogRef(index);
 	}
 
+	blogIndexPair getBlogByURL(string URL)
+	{
+		string formattedURL;
+
+		try
+		{
+			types::t_URL url(URL);
+
+			if (url.getDomains().size() == 3 && url.getDomain(2) != "" && url.getDomain(1) == "tumblr" && url.getDomain(0) == "com")
+				formattedURL = url.getDomain(2) + ".tumblr.com";
+			else
+				formattedURL = URL;
+		}
+		catch (...)
+		{
+			throw dbSearchException("Unable to form URL from \"" + URL + "\".");
+		}
+
+		for (blogIndex i = 0; i < blogDB::getSize(); i++)
+		{
+			if (getBlogRef(i).getURL() == formattedURL)
+			{
+				return getIndexPair(i);
+			}
+		}
+
+		return blogDB::npos;
+
+	}
+
 	//Returns a vector contaning blog index-pairs, where the blogs contained have the least number of copies present in the DB
 	std::vector<blogIndexPair> getBlogIndexesToArchive(int numBlogs)
 	{
@@ -82,10 +113,28 @@ namespace blogDB
 		try
 		{
 			//"Seed" the list of blogs to return
-			for(int i = 0; i < numBlogs; i++)
 			{
-				if(i < totalNumBlogs) ret.push_back(getIndexPair(i));
-				else break;
+				blogIndex seedIndex = 0;
+				//True when blogs with the 'needArchive' flag are present in the DB
+				bool needsArchiveExist = true;
+				while (ret.size() < numBlogs)
+				{
+					if (seedIndex < totalNumBlogs)
+					{
+						
+						if (getBlogRef(seedIndex).getState() == (needsArchiveExist ? types::archiveState::needsArchive : types ::archiveState::archived))
+						{
+							ret.push_back(getIndexPair(seedIndex));
+						}
+					}
+					else
+					{
+						seedIndex = 0;
+						needsArchiveExist = false;
+						continue;
+					}
+					seedIndex++;
+				}
 			}
 
 			//Compare the DB to our shortlist
@@ -96,10 +145,24 @@ namespace blogDB
 					//Check the current item in the DB against our list
 					for(int i = 0; i < ret.size(); i++)
 					{
-						if(getBlogRef(ret[i]).getNumCopies() > getBlogRef(index).getNumCopies())
+						//Make sure it's been validated
+						if(getBlogRef(index).getState() == types::archiveState::needsArchive || getBlogRef(index).getState() == types::archiveState::archived)
 						{
-							ret[i] = getIndexPair(index);
-							break;
+							if (getBlogRef(ret[i]).getNumCopies() > getBlogRef(index).getNumCopies())
+							{
+								bool isUnique = true;
+								//Makes sure the blog in question isn't already on the list
+								for(int q = 0; q < ret.size(); q++)
+								{
+									if (ret[q] == getIndexPair(index))
+									{
+										isUnique = false;
+										break;
+									}
+								}
+								if(isUnique) ret[i] = getIndexPair(index);
+								break;
+							}
 						}
 					}
 
@@ -135,7 +198,7 @@ namespace blogDB
 		return ret;
 	}
 
-	std::vector<blog> getBlogsToArchive(int numBlogs, types::user archiver)
+	std::vector<blog> getBlogsToArchive(int numBlogs, types::archive archiver)
 	{
 		std::vector<blogIndexPair> pairs = getBlogIndexesToArchive(numBlogs);
 
@@ -156,10 +219,52 @@ namespace blogDB
 		return ret;
 	}
 
-	void append(blog newBlog)
+	void approveBlog(blogIndexPair loc)
 	{
 		dbWrite.lock();
-		if ((long long int)totalNumBlogs >= (long long int) maxArraySize * (long long int) maxArraySize) throw dbException("DB has reached max space!");
+		getBlogRef(loc).approve();
+		dbWrite.unlock();
+	}
+
+	void rejectBlog(blogIndexPair loc)
+	{
+		dbWrite.lock();
+		getBlogRef(loc).reject();
+		dbWrite.unlock();
+	}
+
+	void append(blog newBlog, bool ignoreDupeCheck)
+	{
+		if (!ignoreDupeCheck)
+		{
+			//Here so we can check all blogs we know of without locking the DB, and then look for any added while we were looking
+			blogIndex lastKnownSize = totalNumBlogs;
+
+			//Check to see if the blog already exists
+			for (blogIndex i = 0; i < lastKnownSize; i++)
+			{
+				if (getBlogRef(i).getURL() == newBlog.getURL())
+				{
+					progLog::write("Blog \"" + newBlog.getURL() + "\" is arlready present in the DB.");
+					return;
+				}
+			}
+
+			dbWrite.lock();
+
+			//Check for blogs added while we were doing the first round of checking?
+			for (blogIndex i = lastKnownSize; i < totalNumBlogs; i++)
+			{
+				if (getBlogRef(i).getURL() == newBlog.getURL())
+				{
+					progLog::write("Blog \"" + newBlog.getURL() + "\" is arlready present in the DB.");
+					return;
+				}
+			}
+		}
+		else dbWrite.lock();
+
+		if ((long long int)totalNumBlogs >= (long long int) maxArraySize * (long long int) maxArraySize) throw dbException("DB has reached max size!");
 
 		//setBlogAt(totalNumBlogs, newBlog);
 		getBlogRef(totalNumBlogs, true) = newBlog;
@@ -226,7 +331,12 @@ namespace blogDB
 				advance("<Archivers>");
 				for(int i = 0; i < curr.numCopiesRef(); i++)
 				{
-					curr.usersRef().push_back(get());
+					advance("<User>");
+					types::archive cArch;
+
+					cArch.who = types::user(get());
+					cArch.program = types::archiveProgram(get());
+					curr.usersRef().push_back(cArch);
 				}
 				advance("</blog>");
 
@@ -308,7 +418,9 @@ namespace blogDB
 				append("<Archivers>");
 				for(int i = 0; i < curr.getNumCopies(); i++)
 				{
-					append(curr.getArchivers()[i].getName());
+					append("<User>");
+					append(curr.getArchivers()[i].who.getName());
+					append(curr.getArchivers()[i].program.program);
 				}
 				append("</blog>\n");
 				

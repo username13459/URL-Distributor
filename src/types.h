@@ -7,6 +7,9 @@ using std::string;
 
 namespace types
 {
+	typedef long int blogIndex;
+	typedef std::pair<int, int> blogIndexPair;
+
 	struct Exception
 	{
 		Exception() {}
@@ -20,13 +23,41 @@ namespace types
 	class user
 	{
 	public:
+		user() {}
 		user(string discordTag) { this->discordTag = discordTag; }
 
 	private:
-		string discordTag;
+		string discordTag = "UNDEF";
 
 	public:
 		string getName() { return discordTag; }
+	};
+
+	struct archiveProgram
+	{
+		archiveProgram() { }
+
+		archiveProgram(string program)
+		{
+			this->program = program;
+		}
+
+		string program = "UNDEF";
+	};
+
+
+
+	struct archive
+	{
+		archive() {}
+		archive(user _user, archiveProgram program)
+		{
+			this->who = _user;
+			this->program = program;
+		};
+
+		user who;
+		archiveProgram program;
 	};
 
 	enum class archiveState
@@ -34,6 +65,7 @@ namespace types
 		pendingReview,
 		needsArchive,
 		archived,
+		reject,
 	};
 
 	
@@ -70,7 +102,7 @@ namespace types
 		//The number of people who've signed on to archive this blog
 		int numCopies = 0;
 
-		std::vector<user> archivers;
+		std::vector<archive> archivers;
 
 	public:
 		//Returns 'URL'
@@ -82,13 +114,16 @@ namespace types
 		//Returns 'numCopies'
 		int getNumCopies() { return numCopies;  }
 
-		std::vector<user> getArchivers() { return archivers; }
+		std::vector<archive> getArchivers() { return archivers; }
 
+		//Sets the state flag to 'needsArchive' and 'reject', respectively
+		void approve() { if(state != archiveState::archived) state = archiveState::needsArchive; }
+		void reject() { state = archiveState::reject; }
 
 		//>>Adds '_user' to the list of people who are archiving the blog
 		//@ Modifies: 'archivers', 'numCopies'
 		//@ Modifies: 'state' *IF* state != archived
-		void addDownloader(user _user);
+		void addDownloader(archive _archive);
 
 	};
 
@@ -98,6 +133,6 @@ namespace types
 		string & URLRef() { return URL; }
 		archiveState & stateRef() { return state; }
 		int & numCopiesRef() { return numCopies; }
-		std::vector<user> & usersRef() { return archivers; }
+		std::vector<archive> & usersRef() { return archivers; }
 	};
 }

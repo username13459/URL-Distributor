@@ -122,6 +122,8 @@
     <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\Source.cpp" />
     <ClCompile Include="..\src\types.cpp" />
+    <ClCompile Include="..\src\URLtypes.cpp" />
+    <ClCompile Include="..\src\util.cpp" />
     <ClCompile Include="..\zlib\cryptography.cpp" />
     <ClCompile Include="..\zlib\draw.cpp" />
     <ClCompile Include="..\zlib\fileIO.cpp" />
@@ -139,6 +141,8 @@
     <ClInclude Include="..\src\db.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\types.h" />
+    <ClInclude Include="..\src\URLtypes.h" />
+    <ClInclude Include="..\src\util.h" />
     <ClInclude Include="..\zlib\cryptography.h" />
     <ClInclude Include="..\zlib\draw.h" />
     <ClInclude Include="..\zlib\fileIO.h" />

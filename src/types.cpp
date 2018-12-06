@@ -1,11 +1,12 @@
 
 
 #include "types.h"
+#include "db.h"
 
 namespace types
 {
 	//Provides human-readable versions of archiveState.   NEEDS TO BE KEPT IN SYNC!
-	static const string archiveStateStrings[] = { "pendingReview", "needsArchive", "archived" };
+	static const string archiveStateStrings[] = { "pendingReview", "needsArchive", "archived", "reject" };
 
 	//Converts the archiveState enum to a human-readable string
 	string archiveStateToString(types::archiveState state)
@@ -20,9 +21,9 @@ namespace types
 		//TODO: Preform validation to make sure the link is formatted correctly in the future
 	}
 
-	void blog::addDownloader(user _user)
+	void blog::addDownloader(archive _archive)
 	{
-		archivers.push_back(_user);
+		archivers.push_back(_archive);
 		numCopies++;
 		state = archiveState::archived;
 	}
