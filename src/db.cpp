@@ -293,14 +293,25 @@ namespace blogDB
 
 		try
 		{
+			string data;
+
+			auto trimJunkChars = [&data]()
+			{
+				if(data[data.size()-1] == '\r') data.erase(data.begin() + data.size() - 1);
+			};
+
+
 			load.open(dbFile);
 
-			string data;
 			getline(load, data);
+			
+			trimJunkChars();
 
 			if(data != "totalNumBlogs") throw dbLoadFailed("DB file corrupted!");
 			
 			getline(load, data);
+			trimJunkChars();
+
 			{
 				stringstream convert;
 				convert << data;
@@ -326,15 +337,17 @@ namespace blogDB
 						std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
 					}
 
-					auto advance = [&load, &data](string dataExpected = "")
+					auto advance = [&load, &data, trimJunkChars](string dataExpected = "")
 					{
 						getline(load, data);
+						trimJunkChars();
 						if (data != dataExpected)  progLog::write("Expected + \"" + dataExpected + "\", got \"" + data + "\"!");
 					};
 
-					auto get = [&load, &data]()
+					auto get = [&load, &data, trimJunkChars]()
 					{
 						getline(load, data);
+						trimJunkChars();
 						return data;
 					};
 
