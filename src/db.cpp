@@ -130,6 +130,7 @@ namespace blogDB
 					}
 					else
 					{
+						if (!needsArchiveExist) break;
 						seedIndex = 0;
 						needsArchiveExist = false;
 						continue;
@@ -307,54 +308,60 @@ namespace blogDB
 				if(convert.fail()) throw dbLoadFailed("Cannot parse totalNumBlogs: " + data);
 			}
 
-			//The size of one tenth of a percent of the DB, used to determine when to output progress messages
-			int onePercDB = totalNumBlogs / 100;
-
-			for(blogIndex i = 0; i < totalNumBlogs; i++)
+			//if (totalNumBlogs != 0)
 			{
-				
 
-				if(i%onePercDB == 0)
+				//The size of one tenth of a percent of the DB, used to determine when to output progress messages
+				int onePercDB = totalNumBlogs / 100;
+
+				if (onePercDB == 0) onePercDB = 1;
+
+				for (blogIndex i = 0; i < totalNumBlogs; i++)
 				{
-					std::cout << "Progress:";
-					std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
+
+
+					if (i%onePercDB == 0)
+					{
+						std::cout << "Progress:";
+						std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
+					}
+
+					auto advance = [&load, &data](string dataExpected = "")
+					{
+						getline(load, data);
+						if (data != dataExpected)  progLog::write("Expected + \"" + dataExpected + "\", got \"" + data + "\"!");
+					};
+
+					auto get = [&load, &data]()
+					{
+						getline(load, data);
+						return data;
+					};
+
+					types::modifiableBlog curr;
+
+					advance("");
+					advance("<blog>");
+					advance("<URL>");
+					curr.URLRef() = get();
+					advance("<State>");
+					curr.stateRef() = (types::archiveState)(int)conv::toNum(get());
+					advance("<numCopies>");
+					curr.numCopiesRef() = (int)conv::toNum(get());
+					advance("<Archivers>");
+					for (int i = 0; i < curr.numCopiesRef(); i++)
+					{
+						advance("<User>");
+						types::archive cArch;
+
+						cArch.who = types::user(get());
+						cArch.program = types::archiveProgram(get());
+						curr.usersRef().push_back(cArch);
+					}
+					advance("</blog>");
+
+					getBlogRef(i, true) = blog(curr);
 				}
-
-				auto advance = [&load, &data](string dataExpected = "")
-				{
-					getline(load, data);
-					if(data != dataExpected)  progLog::write("Expected + \"" + dataExpected + "\", got \"" + data + "\"!");
-				};
-
-				auto get = [&load, &data]()
-				{
-					getline(load, data);
-					return data;
-				};
-
-				types::modifiableBlog curr;
-
-				advance("");
-				advance("<blog>");
-				advance("<URL>");
-				curr.URLRef() = get();
-				advance("<State>");
-				curr.stateRef() = (types::archiveState)(int)conv::toNum(get());
-				advance("<numCopies>");
-				curr.numCopiesRef() = (int)conv::toNum(get());
-				advance("<Archivers>");
-				for(int i = 0; i < curr.numCopiesRef(); i++)
-				{
-					advance("<User>");
-					types::archive cArch;
-
-					cArch.who = types::user(get());
-					cArch.program = types::archiveProgram(get());
-					curr.usersRef().push_back(cArch);
-				}
-				advance("</blog>");
-
-				getBlogRef(i, true) = blog(curr);
 			}
 
 			progLog::write("DB Load complete in " + conv::toString(loadTime.getTime()) + "s.");
@@ -377,12 +384,12 @@ namespace blogDB
 
 	void saveDB(string location)
 	{
-		if(location == "") location = dbFile;
+		if (location == "") location = dbFile;
 
 		zlib::timer saveTime;
 
 		progLog::write("Preparing to write database to file at " + location);
-		
+
 		dbWrite.lock();
 
 		progLog::write("Database locked.");
@@ -392,7 +399,7 @@ namespace blogDB
 		{
 			out.open(location);
 		}
-		catch(...)
+		catch (...)
 		{
 			location += "_fallback";
 			progLog::write("<<CRITICAL>> Unable to open preferred output location, using " + location);
@@ -400,7 +407,7 @@ namespace blogDB
 			{
 				out.open(location);
 			}
-			catch(...)
+			catch (...)
 			{
 				progLog::write("<<CRITICAL>> Unable to open fallback location!");
 				progLog::write("<<CRITICAL>> DB SAVE FAILED!");
@@ -413,63 +420,67 @@ namespace blogDB
 		out << totalNumBlogs << endl;
 		out << endl;
 
-		//The size of one tenth of a percent of the DB, used to determine when to output progress messages
-		int onePercDB = totalNumBlogs / 100;
-
-		for(blogIndex i = 0; i < totalNumBlogs; i++)
+		//if (totalNumBlogs != 0)
 		{
-			if (i%onePercDB == 0)
+			//The size of one tenth of a percent of the DB, used to determine when to output progress messages
+			int onePercDB = totalNumBlogs / 100;
+			if (onePercDB == 0) onePercDB = 1;
+
+			for (blogIndex i = 0; i < totalNumBlogs; i++)
 			{
-				std::cout << "Progress:";
-				std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
-			}
-
-			try
-			{
-				string outputBlock = "";
-
-				auto append = [&outputBlock](string data)
+				if (i%onePercDB == 0)
 				{
-					outputBlock += data + '\n';
-				};
-
-				blog curr = getBlog(i);
-
-				append("<blog>");
-				append("<URL>");
-				append(curr.getURL());
-				append("<State>");
-				append(conv::toString((int)curr.getState()));
-				append("<numCopies>");
-				append(conv::toString(curr.getNumCopies()));
-				append("<Archivers>");
-				for(int i = 0; i < curr.getNumCopies(); i++)
-				{
-					append("<User>");
-					append(curr.getArchivers()[i].who.getName());
-					append(curr.getArchivers()[i].program.program);
+					std::cout << "Progress:";
+					std::cout << (int)round(double(i) / double(totalNumBlogs) * double(100)) << '%' << endl;
 				}
-				append("</blog>\n");
-				
-				out << outputBlock;
-				out.flush();
 
-			}
-			catch(dbOutOfBoundsException e)
-			{
-				progLog::write("Caught dbOutOfBounds during save: " + e.details);
-			}
-			catch(dbNULLPointerException e)
-			{
-				progLog::write("Caught dbNullPointer during save: " + e.details);
-			}
-			catch(dbException e)
-			{
-				progLog::write("Caught generic DB exception: " + e.details);
-			}
-			catch(...)
-			{
-				progLog::write("Caught unknown exception!");
+				try
+				{
+					string outputBlock = "";
+
+					auto append = [&outputBlock](string data)
+					{
+						outputBlock += data + '\n';
+					};
+
+					blog curr = getBlog(i);
+
+					append("<blog>");
+					append("<URL>");
+					append(curr.getURL());
+					append("<State>");
+					append(conv::toString((int)curr.getState()));
+					append("<numCopies>");
+					append(conv::toString(curr.getNumCopies()));
+					append("<Archivers>");
+					for (int i = 0; i < curr.getNumCopies(); i++)
+					{
+						append("<User>");
+						append(curr.getArchivers()[i].who.getName());
+						append(curr.getArchivers()[i].program.program);
+					}
+					append("</blog>\n");
+
+					out << outputBlock;
+					out.flush();
+
+				}
+				catch (dbOutOfBoundsException e)
+				{
+					progLog::write("Caught dbOutOfBounds during save: " + e.details);
+				}
+				catch (dbNULLPointerException e)
+				{
+					progLog::write("Caught dbNullPointer during save: " + e.details);
+				}
+				catch (dbException e)
+				{
+					progLog::write("Caught generic DB exception: " + e.details);
+				}
+				catch (...)
+				{
+					progLog::write("Caught unknown exception!");
+				}
 			}
 		}
 

@@ -353,25 +353,74 @@ int main(int argc, char * argv[])
 					continue;
 				}
 
-				blogIndexPair loc = blogDB::getBlogByURL(commands[2]);
-
-				if (loc == blogDB::npos)
+				if (commands[2] == "--file")
 				{
-					cout << "Could not find blog \"" << commands[2] << "\"!" << endl;
-					continue;
-				}
+					if (commands.size() < 4)
+					{
+						cout << "Please specify a file to pull from" << endl;
+						continue;
+					}
+					else
+					{
+						std::ifstream in;
+						in.open(commands[3]);
 
-				if (set == types::archiveState::needsArchive)
-				{
-					blogDB::approveBlog(loc);
-					cout << "Blog flagged as good!" << endl;
-				}
-				else if (set == types::archiveState::reject)
-				{
-					blogDB::rejectBlog(loc);
-					cout << "Blog flagged as rejected." << endl;
-				}
+						if (!in.good())
+						{
+							cout << "Unable to open file \"" << commands[3] << "\"." << endl;
+							continue;
+						}
 
+						do
+						{
+							string data;
+							std::getline(in, data);
+
+							blogIndexPair loc = blogDB::getBlogByURL(data);
+
+							if (loc == blogDB::npos)
+							{
+								cout << "Could not find blog \"" << data << "\"!" << endl;
+								continue;
+							}
+
+							if (set == types::archiveState::needsArchive)
+							{
+								blogDB::approveBlog(loc);
+								cout << "Blog \"" << data << "\" flagged as good!" << endl;
+							}
+							else if (set == types::archiveState::reject)
+							{
+								blogDB::rejectBlog(loc);
+								cout << "Blog \"" << data << "\"  flagged as rejected." << endl;
+							}
+
+						} while (!in.eof());
+
+					}
+
+				}
+				else
+				{
+					blogIndexPair loc = blogDB::getBlogByURL(commands[2]);
+
+					if (loc == blogDB::npos)
+					{
+						cout << "Could not find blog \"" << commands[2] << "\"!" << endl;
+						continue;
+					}
+
+					if (set == types::archiveState::needsArchive)
+					{
+						blogDB::approveBlog(loc);
+						cout << "Blog flagged as good!" << endl;
+					}
+					else if (set == types::archiveState::reject)
+					{
+						blogDB::rejectBlog(loc);
+						cout << "Blog flagged as rejected." << endl;
+					}
+				}
 
 			}
 			else if (commands[0] == "add")
